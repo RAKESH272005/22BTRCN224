@@ -40,11 +40,12 @@ const UrlShortener = () => {
     const newUrls = [...urls];
     newUrls[index][field] = value;
     setUrls(newUrls);
-    
-    // Clear error for this field
-    if (errors[$]{index}-${field}]) {
+
+    // Clear error for this field if it exists
+    const key = `${index}-${field}`;
+    if (errors[key]) {
       const newErrors = { ...errors };
-      delete newErrors[${index}-${field}];
+      delete newErrors[key];
       setErrors(newErrors);
     }
   };
@@ -55,20 +56,21 @@ const UrlShortener = () => {
 
     urls.forEach((url, index) => {
       if (!url.originalUrl) {
-        newErrors[${index}-originalUrl] = 'URL is required';
+        newErrors[`${index}-originalUrl`] = 'URL is required';
         isValid = false;
       } else if (!urlService.isValidUrl(url.originalUrl)) {
-        newErrors[${index}-originalUrl] = 'Invalid URL format';
+        newErrors[`${index}-originalUrl`] = 'Invalid URL format';
         isValid = false;
       }
 
       if (url.validity && (isNaN(url.validity) || url.validity <= 0)) {
-        newErrors[${index}-validity] = 'Validity must be a positive number';
+        newErrors[`${index}-validity`] = 'Validity must be a positive number';
         isValid = false;
       }
 
       if (url.shortcode && !/^[a-zA-Z0-9_-]{4,}$/.test(url.shortcode)) {
-        newErrors[${index}-shortcode] = 'Shortcode must be at least 4 characters and contain only letters, numbers, hyphens, and underscores';
+        newErrors[`${index}-shortcode`] =
+          'Shortcode must be at least 4 characters and contain only letters, numbers, hyphens, and underscores';
         isValid = false;
       }
     });
@@ -87,10 +89,12 @@ const UrlShortener = () => {
     }
 
     const newResults = [];
-    const allSuccessful = urls.every((url, index) => {
+    let allSuccessful = true;
+
+    urls.forEach((url, index) => {
       const result = urlService.createShortUrl(
         url.originalUrl,
-        url.validity ? parseInt(url.validity) : 30,
+        url.validity ? parseInt(url.validity, 10) : 30,
         url.shortcode || null
       );
 
@@ -98,15 +102,13 @@ const UrlShortener = () => {
         newResults.push(result.data);
         logger.info('URL shortened successfully', { shortcode: result.data.shortcode });
       } else {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          [${index}-submit]: result.error
+          [`${index}-submit`]: result.error
         }));
         logger.error('URL shortening failed', { error: result.error });
-        return false;
+        allSuccessful = false;
       }
-      
-      return true;
     });
 
     if (allSuccessful) {
@@ -122,7 +124,7 @@ const UrlShortener = () => {
         <Typography variant="h4" component="h1" gutterBottom align="center">
           URL Shortener
         </Typography>
-        
+
         <Typography variant="body1" sx={{ mb: 3 }} align="center">
           Shorten up to 5 URLs at once. Leave validity empty for default 30 minutes.
         </Typography>
@@ -137,13 +139,13 @@ const UrlShortener = () => {
                     label="Original URL"
                     value={url.originalUrl}
                     onChange={(e) => handleInputChange(index, 'originalUrl', e.target.value)}
-                    error={!!errors[${index}-originalUrl]}
-                    helperText={errors[${index}-originalUrl]}
+                    error={!!errors[`${index}-originalUrl`]}
+                    helperText={errors[`${index}-originalUrl`]}
                     placeholder="https://example.com"
                     required
                   />
                 </Grid>
-                
+
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
@@ -151,26 +153,28 @@ const UrlShortener = () => {
                     type="number"
                     value={url.validity}
                     onChange={(e) => handleInputChange(index, 'validity', e.target.value)}
-                    error={!!errors[$]{index}-validity]}
-                    helperText={errors[${index}-validity] || "Optional - defaults to 30 minutes"}
+                    error={!!errors[`${index}-validity`]}
+                    helperText={errors[`${index}-validity`] || 'Optional - defaults to 30 minutes'}
                   />
                 </Grid>
-                
+
                 <Grid item xs={5}>
                   <TextField
                     fullWidth
                     label="Custom Shortcode"
                     value={url.shortcode}
                     onChange={(e) => handleInputChange(index, 'shortcode', e.target.value)}
-                    error={!!errors[${index}-shortcode]}
-                    helperText={errors[${index}-shortcode] || "Optional - auto-generated if empty"}
+                    error={!!errors[`${index}-shortcode`]}
+                    helperText={
+                      errors[`${index}-shortcode`] || 'Optional - auto-generated if empty'
+                    }
                   />
                 </Grid>
-                
+
                 <Grid item xs={1}>
                   {urls.length > 1 && (
-                    <IconButton 
-                      color="error" 
+                    <IconButton
+                      color="error"
                       onClick={() => handleRemoveUrl(index)}
                       aria-label="Remove URL"
                     >
@@ -179,10 +183,10 @@ const UrlShortener = () => {
                   )}
                 </Grid>
               </Grid>
-              
-              {errors[${index}-submit] && (
+
+              {errors[`${index}-submit`] && (
                 <Alert severity="error" sx={{ mt: 1 }}>
-                  {errors[${index}-submit]}
+                  {errors[`${index}-submit`]}
                 </Alert>
               )}
             </Box>
@@ -197,12 +201,8 @@ const UrlShortener = () => {
             >
               Add Another URL
             </Button>
-            
-            <Button
-              type="submit"
-              variant="contained"
-              size="large"
-            >
+
+            <Button type="submit" variant="contained" size="large">
               Shorten URLs
             </Button>
           </Box>
@@ -213,18 +213,18 @@ const UrlShortener = () => {
             <Typography variant="h5" gutterBottom>
               Shortened URLs
             </Typography>
-            
+
             {results.map((result) => (
               <Card key={result.id} sx={{ mb: 2 }}>
                 <CardContent>
                   <Typography variant="h6" color="primary">
-                    http://localhost:3000/{result.shortcode}
+                    {`http://localhost:3000/${result.shortcode}`}
                   </Typography>
-                  
+
                   <Typography variant="body2" color="text.secondary">
                     Original: {result.originalUrl}
                   </Typography>
-                  
+
                   <Typography variant="body2">
                     Expires: {new Date(result.expiresAt).toLocaleString()}
                   </Typography>
