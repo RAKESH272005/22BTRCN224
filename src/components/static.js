@@ -33,13 +33,13 @@ const Statistics = () => {
     const loadData = () => {
       const urlData = urlService.getAllUrls();
       const clickData = storage.getClicks();
-      
+
       setUrls(urlData);
       setClicks(clickData);
-      
-      logger.info('Loaded statistics data', { 
-        urlCount: urlData.length, 
-        clickDataCount: Object.keys(clickData).length 
+
+      logger.info('Loaded statistics data', {
+        urlCount: urlData.length,
+        clickDataCount: Object.keys(clickData).length
       });
     };
 
@@ -48,14 +48,14 @@ const Statistics = () => {
 
   const handleRedirect = (shortcode) => {
     logger.info('Redirecting to URL from statistics', { shortcode });
-    window.location.href = /${shortcode};
+    window.location.href = `http://localhost:3000/${shortcode}`;
   };
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text).then(() => {
       logger.info('Copied URL to clipboard', { text });
     }).catch(err => {
-      logger.error('Failed to copy to clipboard', { error: err.message });
+      logger.error(`Failed to copy to clipboard: ${err.message}`);
     });
   };
 
@@ -94,11 +94,11 @@ const Statistics = () => {
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Typography variant="body2">
-                          http://localhost:3000/{url.shortcode}
+                          {`http://localhost:3000/${url.shortcode}`}
                         </Typography>
                         <IconButton
                           size="small"
-                          onClick={() => copyToClipboard(http://localhost:3001/${url.shortcode})}
+                          onClick={() => copyToClipboard(`http://localhost:3000/${url.shortcode}`)}
                           sx={{ ml: 1 }}
                         >
                           <ContentCopyIcon fontSize="small" />
@@ -106,20 +106,23 @@ const Statistics = () => {
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" sx={{ 
-                        maxWidth: 200, 
-                        overflow: 'hidden', 
-                        textOverflow: 'ellipsis', 
-                        whiteSpace: 'nowrap' 
-                      }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          maxWidth: 200,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
                         {url.originalUrl}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {new Date(url.createdAt).toLocaleString()}
+                      {url.createdAt ? new Date(url.createdAt).toLocaleString() : 'N/A'}
                     </TableCell>
                     <TableCell>
-                      {new Date(url.expiresAt).toLocaleString()}
+                      {url.expiresAt ? new Date(url.expiresAt).toLocaleString() : 'N/A'}
                     </TableCell>
                     <TableCell>
                       {clicks[url.shortcode] ? clicks[url.shortcode].length : 0}
@@ -153,9 +156,9 @@ const Statistics = () => {
             <Typography variant="h5" gutterBottom>
               Click Analytics
             </Typography>
-            
-            {Object.entries(clicks).map(([shortcode, clickData]) => (
-              <Accordion key={shortcode}>
+
+            {Object.entries(clicks).map(([shortcode, clickData], index) => (
+              <Accordion key={`${shortcode}-${index}`}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography>
                     {shortcode} - {clickData.length} clicks
@@ -175,10 +178,10 @@ const Statistics = () => {
                         {clickData.map((click) => (
                           <TableRow key={click.id}>
                             <TableCell>
-                              {new Date(click.timestamp).toLocaleString()}
+                              {click.timestamp ? new Date(click.timestamp).toLocaleString() : 'N/A'}
                             </TableCell>
-                            <TableCell>{click.source}</TableCell>
-                            <TableCell>{click.location}</TableCell>
+                            <TableCell>{click.source || 'Unknown'}</TableCell>
+                            <TableCell>{click.location || 'Unknown'}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
