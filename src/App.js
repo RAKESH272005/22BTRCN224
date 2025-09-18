@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Navigation from './components/navigation';
-import UrlShortener from './components/UrlShortener';
-import Statistics from './components/Statistics';
+import UrlShortener from './components/urlshortener';
+import Statistics from './components/static';
 import RedirectHandler from './components/redirecthandler';
 import logger from './utils/logger';
 
